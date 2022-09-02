@@ -2,10 +2,10 @@ import { Global, Module, Provider } from '@nestjs/common';
 import knex from 'knex';
 import configuration from '../../knexfile';
 import { Model } from 'objection';
-import { TasksRepository } from '../tasks/tasks.repository';
-import { TaskModel } from './models/tasks';
+import { Task } from './models/tasks';
+import { User } from './models/auth';
 
-const models = [TaskModel];
+const models = [Task, User];
 
 const modelsProviders = models.map((model) => {
   return {
