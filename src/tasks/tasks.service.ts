@@ -1,48 +1,32 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { Task, TaskStatus } from './task.model';
-import { v4 as uuid } from 'uuid';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
-import { TaskModel } from 'src/database/models/task.entity';
+import { TaskModel, TaskStatus } from 'src/database/models/tasks';
 import { ModelClass } from 'objection';
+import { TasksRepository } from './tasks.repository';
 
 @Injectable()
 export class TasksService {
-  constructor(@Inject('TaskModel') private taskModel: ModelClass<TaskModel>) {}
+  constructor(private taskRepository: TasksRepository) {}
 
-  async getTaskById(id: string): Promise<TaskModel | null> {
-    const found = await this.taskModel.query().findById(id);
-    if (!found) {
-      throw new NotFoundException(`Task with ID "${id}" not found!`);
-    }
-    return found;
+  getTaskById(id: string): Promise<TaskModel> {
+    return this.taskRepository.getTaskById(id);
   }
 
-  async createTask(createTaskDto: CreateTaskDto): Promise<TaskModel> {
-    const { title, description } = createTaskDto;
-    const inserted = await this.taskModel.query().insertGraph({
-      id: uuid(),
-      title,
-      description,
-      status: TaskStatus.OPEN,
-    });
-
-    return inserted;
+  createTask(createTaskDto: CreateTaskDto): Promise<TaskModel> {
+    return this.taskRepository.createTask(createTaskDto);
   }
 
-  async getTaksWithFilter(filerDto: GetTasksFilterDto): Promise<TaskModel[]> {
-    const { status, search } = filerDto;
+  getTaksWithFilter(filterDto: GetTasksFilterDto): Promise<TaskModel[]> {
+    return this.taskRepository.getTaksWithFilter(filterDto);
+  }
 
-    const query = this.taskModel.query();
-    if (status) {
-      query.where('status', '=', status);
-    }
+  async deleteTask(id: string): Promise<void> {
+    return await this.taskRepository.deleteTask(id);
+  }
 
-    if (search) {
-      query.whereRaw('(title like ?)', [`%${search}%`]);
-    }
-
-    return await query;
+  updateTaskStatus(id: string, status: TaskStatus): Promise<TaskModel> {
+    return this.taskRepository.updateTaskStatus(id, status);
   }
 
   /*getAllTasks(): Task[] {

@@ -1,5 +1,4 @@
 import { Knex } from 'knex';
-import { TaskStatus } from 'src/tasks/task.model';
 
 const tableName = 'tasks';
 

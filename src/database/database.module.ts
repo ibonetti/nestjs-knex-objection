@@ -2,11 +2,12 @@ import { Global, Module, Provider } from '@nestjs/common';
 import knex from 'knex';
 import configuration from '../../knexfile';
 import { Model } from 'objection';
-import { TaskModel } from './models/task.entity';
+import { TasksRepository } from '../tasks/tasks.repository';
+import { TaskModel } from './models/tasks';
 
 const models = [TaskModel];
 
-const modelProviders = models.map((model) => {
+const modelsProviders = models.map((model) => {
   return {
     provide: model.name,
     useValue: model,
@@ -14,7 +15,7 @@ const modelProviders = models.map((model) => {
 });
 
 const providers: Provider[] = [
-  ...modelProviders,
+  ...modelsProviders,
   {
     provide: 'KnexConnection',
     useFactory: async () => {

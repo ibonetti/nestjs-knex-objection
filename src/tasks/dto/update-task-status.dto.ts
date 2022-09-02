@@ -1,5 +1,5 @@
 import { IsEnum } from 'class-validator';
-import { TaskStatus } from '../task.model';
+import { TaskStatus } from '../../database/models/tasks/task-status.enum';
 
 export class UpdateTaskStatusDto {
   @IsEnum(TaskStatus)

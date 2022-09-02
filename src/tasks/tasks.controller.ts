@@ -8,7 +8,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { TaskModel } from 'src/database/models/task.entity';
+import { TaskModel } from 'src/database/models/tasks';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
@@ -32,6 +32,21 @@ export class TasksController {
   getTasks(@Query() filterDto: GetTasksFilterDto): Promise<TaskModel[]> {
     return this.tasksService.getTaksWithFilter(filterDto);
   }
+
+  @Delete('/:id')
+  async deleteTask(@Param('id') id: string): Promise<void> {
+    return await this.tasksService.deleteTask(id);
+  }
+
+  @Patch('/:id/status')
+  updateTaskStatus(
+    @Param('id') id: string,
+    @Body() updateTaskStatusDto: UpdateTaskStatusDto,
+  ): Promise<TaskModel> {
+    const { status } = updateTaskStatusDto;
+    return this.tasksService.updateTaskStatus(id, status);
+  }
+
   /*@Get()
   getTasks(@Query() filterDto: GetTasksFilterDto): Task[] {
     if (Object.keys(filterDto).length) {
@@ -49,20 +64,6 @@ export class TasksController {
   @Get('/db/db')
   async getTaskDB() {
     return await this.tasksService.getTaskDB();
-  }
-
-  @Delete('/:id')
-  deleteTask(@Param('id') id: string): void {
-    this.tasksService.deleteTask(id);
-  }
-
-  @Patch('/:id/status')
-  updateTaskStatus(
-    @Param('id') id: string,
-    @Body() updateTaskStatusDto: UpdateTaskStatusDto,
-  ) {
-    const { status } = updateTaskStatusDto;
-    return this.tasksService.updateTaskStatus(id, status);
   }
 
   @Post() //@Body('title') title, @Body('description') description
