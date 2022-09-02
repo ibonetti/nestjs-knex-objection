@@ -1,20 +1,56 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Task, TaskStatus } from './task.model';
 import { v4 as uuid } from 'uuid';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
-import { Task as TaskModel } from './task.entity';
+import { TaskModel } from 'src/database/models/task.entity';
+import { ModelClass } from 'objection';
 
 @Injectable()
 export class TasksService {
-  private tasks: Task[] = [];
+  constructor(@Inject('TaskModel') private taskModel: ModelClass<TaskModel>) {}
 
-  getAllTasks(): Task[] {
+  async getTaskById(id: string): Promise<TaskModel | null> {
+    const found = await this.taskModel.query().findById(id);
+    if (!found) {
+      throw new NotFoundException(`Task with ID "${id}" not found!`);
+    }
+    return found;
+  }
+
+  async createTask(createTaskDto: CreateTaskDto): Promise<TaskModel> {
+    const { title, description } = createTaskDto;
+    const inserted = await this.taskModel.query().insertGraph({
+      id: uuid(),
+      title,
+      description,
+      status: TaskStatus.OPEN,
+    });
+
+    return inserted;
+  }
+
+  async getTaksWithFilter(filerDto: GetTasksFilterDto): Promise<TaskModel[]> {
+    const { status, search } = filerDto;
+
+    const query = this.taskModel.query();
+    if (status) {
+      query.where('status', '=', status);
+    }
+
+    if (search) {
+      query.whereRaw('(title like ?)', [`%${search}%`]);
+    }
+
+    return await query;
+  }
+
+  /*getAllTasks(): Task[] {
     return this.tasks;
   }
 
   async getTaskDB() {
-    const query = await TaskModel.query();
+    const query = await this.taskModel.query();
     return query;
   }
 
@@ -70,7 +106,7 @@ export class TasksService {
 
   async createTaskDB(createTaskDto: CreateTaskDto): Promise<TaskModel> {
     const { title, description } = createTaskDto;
-    const inserted = await TaskModel.query().insertGraph({
+    const inserted = await this.taskModel.query().insertGraph({
       id: uuid(),
       title,
       description,
@@ -78,5 +114,5 @@ export class TasksService {
     });
 
     return inserted;
-  }
+  }*/
 }

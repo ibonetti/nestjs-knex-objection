@@ -1,3 +1,5 @@
+import { Knex } from 'knex';
+
 const configuration = {
   client: 'postgresql',
   connection: {
@@ -7,6 +9,10 @@ const configuration = {
     password: 'postgres',
     database: 'task_management',
   },
-};
+  migrations: {
+    directory: './src/database/migrations',
+  },
+  debug: true,
+} as Knex.Config;
 
 export default configuration;
