@@ -12,7 +12,7 @@ const configuration = {
   migrations: {
     directory: './src/database/migrations',
   },
-  debug: true,
+  debug: false,
 } as Knex.Config;
 
 export default configuration;

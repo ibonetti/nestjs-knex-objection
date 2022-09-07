@@ -1,4 +1,9 @@
-import { Inject, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  NotFoundException,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Model, ModelClass } from 'objection';
 import { Task, TaskStatus } from '../database/models/tasks';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -7,7 +12,9 @@ import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { User } from 'src/database/models/auth';
 
 export class TasksRepository {
-  constructor(@Inject('Task') private task: ModelClass<Task>) {}
+  private logger = new Logger('TasksRepository', { timestamp: true });
+
+  constructor(@Inject(Task) private task: typeof Task) {}
 
   async getTaskById(id: string, user: User): Promise<Task> {
     const found = await this.task
@@ -55,7 +62,17 @@ export class TasksRepository {
       );
     }
 
-    return await query;
+    try {
+      return await query;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get tasks for user "${
+          user.username
+        }". Filters: ${JSON.stringify(filterDto)}`,
+        error,
+      );
+      throw new InternalServerErrorException(error);
+    }
   }
 
   async deleteTask(id: string, user: User): Promise<void> {
