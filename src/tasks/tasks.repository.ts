@@ -4,57 +4,79 @@ import { Task, TaskStatus } from '../database/models/tasks';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { v4 as uuid } from 'uuid';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
+import { User } from 'src/database/models/auth';
 
 export class TasksRepository {
   constructor(@Inject('Task') private task: ModelClass<Task>) {}
 
-  async getTaskById(id: string): Promise<Task> {
-    const found = await this.task.query().findById(id);
+  async getTaskById(id: string, user: User): Promise<Task> {
+    const found = await this.task
+      .query()
+      .findById(id)
+      .where('userid', '=', user.id);
     if (!found) {
       this.taskNotFoundError(id);
     }
     return found;
   }
 
-  async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
+  async createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
     const { title, description } = createTaskDto;
     const inserted = await this.task.query().insertGraph({
       id: uuid(),
       title,
       description,
       status: TaskStatus.OPEN,
+      userid: user.id,
     });
 
     return inserted;
   }
 
-  async getTaksWithFilter(filerDto: GetTasksFilterDto): Promise<Task[]> {
-    const { status, search } = filerDto;
+  async getTaksWithFilter(
+    filterDto: GetTasksFilterDto,
+    user: User,
+  ): Promise<Task[]> {
+    const { status, search } = filterDto;
 
     const query = this.task.query();
+    query.where('userid', '=', user.id);
     if (status) {
       query.where('status', '=', status);
     }
 
     if (search) {
       const param = `%${search}%`;
-      query.whereRaw('(title like :param or description like :param)', {
-        param,
-      });
+      query.whereRaw(
+        '(LOWER(title) like LOWER(:param) or LOWER(description) like LOWER(:param))',
+        {
+          param,
+        },
+      );
     }
 
     return await query;
   }
 
-  async deleteTask(id: string): Promise<void> {
-    const ret = await this.task.query().deleteById(id);
+  async deleteTask(id: string, user: User): Promise<void> {
+    const ret = await this.task
+      .query()
+      .deleteById(id)
+      .where('userid', '=', user.id);
     if (ret === 0) {
       this.taskNotFoundError(id);
     }
   }
 
-  async updateTaskStatus(id: string, status: TaskStatus): Promise<Task> {
-    const task = await this.task.query().patchAndFetchById(id, { status });
+  async updateTaskStatus(
+    id: string,
+    status: TaskStatus,
+    user: User,
+  ): Promise<Task> {
+    const task = await this.task
+      .query()
+      .patchAndFetchById(id, { status })
+      .where('userid', '=', user.id);
     if (!task) {
       this.taskNotFoundError(id);
     }
