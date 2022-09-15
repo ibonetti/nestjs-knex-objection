@@ -1,4 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Res } from '@nestjs/common';
+import { createReadStream } from 'fs';
 import { AppService } from './app.service';
 
 @Controller()
@@ -8,5 +9,12 @@ export class AppController {
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+
+  @Get('/file')
+  getFile(@Res() res) {
+    const file = createReadStream(`${__dirname}/files/teste2.pkg`);
+    console.log(__dirname);
+    file.pipe(res);
   }
 }

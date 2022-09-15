@@ -9,12 +9,16 @@ import { Task, TaskStatus } from '../database/models/tasks';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { v4 as uuid } from 'uuid';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
-import { User } from 'src/database/models/auth';
+import { User } from '../database/models/auth';
+import { MessagingService } from '../messaging/messaging.service';
 
 export class TasksRepository {
   private logger = new Logger('TasksRepository', { timestamp: true });
 
-  constructor(@Inject(Task) private task: typeof Task) {}
+  constructor(
+    @Inject(Task) private task: typeof Task,
+    private messagingService: MessagingService,
+  ) {}
 
   async getTaskById(id: string, user: User): Promise<Task> {
     const found = await this.task
@@ -37,6 +41,11 @@ export class TasksRepository {
       userid: user.id,
     });
 
+    //Should send to some queue, but its just for testing...
+    /*this.messagingService.sendNewtaskSmsToUser({
+      task: inserted,
+      user,
+    });*/
     return inserted;
   }
 

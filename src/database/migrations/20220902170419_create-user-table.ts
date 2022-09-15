@@ -7,6 +7,8 @@ export async function up(knex: Knex): Promise<void> {
     t.uuid('id', { primaryKey: true });
     t.string('username').unique();
     t.string('password');
+    t.string('phone_number');
+    t.string('country', 2);
   });
 }
 

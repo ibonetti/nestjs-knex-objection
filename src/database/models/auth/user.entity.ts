@@ -6,7 +6,9 @@ export class User extends Model {
 
   id!: string;
   username!: string;
-  password: string;
+  password!: string;
+  phone_number!: string;
+  country!: string;
 
   static get relationMappings(): RelationMappings | RelationMappingsThunk {
     return {
