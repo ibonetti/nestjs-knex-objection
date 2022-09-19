@@ -1,8 +1,36 @@
 version: '3'
 
 services:
+  database:
+    image: postgres
+    container_name: postgres-nest-compose
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=task_management
+    volumes:
+      - pgdata:/data/postgres
+  queue:
+    image: redis:alpine
+    container_name: nest-queue
+    restart: always
+    ports:
+      - 6379:6379
   app:
     build: .
     ports:
       - '3000:3000'
-    command: npm run start:prod
+    command: npm run start:com
+    links:
+      - database
+      - queue
+    depends_on:
+      - database
+      - queue
+
+volumes:
+  pgdata:
+    driver: local
